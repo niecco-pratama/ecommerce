@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Commerce Store</title>
+    <title>nieccosupply</title>
     <style>
         * {
             margin: 0;
@@ -105,32 +105,88 @@
         .btn-primary:active {
             transform: scale(0.98);
         }
+
+        /* additional styles for new UI (light, matching original palette) */
+        .site-title {
+            font-size: 32px;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        #searchInput { flex:1; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); color:#fff }
+        #cartBtn { background:transparent;border:none;color:#fff;cursor:pointer;position:relative;font-weight:bold }
+        .cart-count { background:#ff5252;color:#fff;border-radius:999px;padding:2px 8px;margin-left:8px;font-size:12px }
+        #cartModal { display:none;position:fixed;right:20px;top:80px;width:320px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.3);padding:16px;z-index:999 }
     </style>
 </head>
 <body id="body">
-  <div class="container">
-     <div class="saldo" id="saldo"></div>
-<div class="card-list" id="cardList"></div>
-     <script>  
-    let saldo = 1000000000000;
- const products = [
+    <div class="container">
+         <h1 class="site-title">nieccosupply</h1>
+          <div class="saldo" id="saldo"></div>
+          <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <input id="searchInput" class="search-input" type="search" placeholder="Cari barang...">
+              <button id="cartBtn" class="cart-btn">Keranjang <span id="cartCount" class="cart-count">0</span></button>
+          </div>
+    <div class="card-list" id="cardList"></div>
+        <div id="cartModal">
+              <h3 style="margin-bottom:10px">Keranjang</h3>
+              <div id="cartItems"></div>
+              <div style="margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:space-between">
+                    <strong id="cartTotal">Total: Rp0</strong>
+                    <div style="display:flex;gap:8px">
+                         <button id="clearCart" style="padding:8px;border-radius:8px;border:none;background:#ccc;">Bersihkan</button>
+                         <button id="checkoutBtn" style="padding:8px;border-radius:8px;border:none;background:linear-gradient(135deg,#33438a 0%,#764ba2 100%);color:#fff">Checkout</button>
+                    </div>
+              </div>
+          </div>
+          <script>
+         let saldo = 1000000000;
+     const products = [
     {
-        name: "CELANA RCS",
-        desc: "original.",
+        name: "CELANA RUCAS",
+        desc: "pake ini di jamin keren n nya 3 kerennn.",
         price: 1000000,
         img: "download (3).jpg"
     },
     {
         name: "I PHONE 17 PRO",
-        desc: "membeli merchandise original.",
+        desc: "beli buat pamer cocok.",
         price: 25000000,
         img: "download (1).jpg"
     },
     {
-        name: "JAKET RCS",
-        desc: "laun nupenting ceurik.",
+        name: "JAKET RUCAS",
+        desc: "pake ini pasti ganteng dan genggong abis.",
         price: 1500000,
         img: "download.jpg"
+    }
+    ,
+    {
+        name: "SEPATU Nappa Milano – Premium Leather Shoes",
+        desc: "KALCERRRRR.",
+        price: 80000000,
+        img: "NP32_1200x.webp"
+    },
+    {
+        name: "TOPI GUCCI",
+        desc: "topi keren aura ceo muda.",
+        price: 15000000,
+        img: "download (4).jpg"
+    },
+    {
+        name: "KACAMATA DIOR",
+        desc: "cocok kembali lagi aura ceo nya keluar.",
+        price: 18000000,
+        img: "download (5).jpg"
+    },
+    {
+        name: "POLO GIORDANO",
+        desc: "DI JAMIN HARUMM 12 MILIAR .",
+        price: 50000000,
+        img: "download (6).jpg"
     }
    
 ];
@@ -143,37 +199,150 @@
    }).format(amount);
 }
   
-  cardList.innerHTML = products
-    .map((product, index) =>  {
-        return `
-        <div class="card">
-            <img src="${product.img}" >
-            <div class="card-body">
-                <h2>${product.name}</h2>
-                <p>${product.desc}</p>
-                <h3 style="color: rgb(0, 255, 106)">${formatRupiah(product.price)}</h3>
-                <button class="btn-primary beli" data-index=${index}>Beli</button>
-                </div>
-                </div>
-                `;
-         })
+// state
+let cart = {}; // { index: quantity }
 
-         .join("")
-            const beliButtons = document.querySelectorAll(".beli");
-            beliButtons.forEach(button => {
-                button.addEventListener("click", function() {
-                    const index = this.getAttribute("data-index");
-                    const product = products[index];
-                    if (saldo >= product.price) {
-                        saldo -= product.price;
-                        alert(`Anda berhasil membeli ${product.name} seharga ${formatRupiah(product.price)}. Sisa saldo: ${formatRupiah(saldo)}`);
-                    } else {
-                        alert(`Saldo Anda tidak cukup untuk membeli ${product.name}. Saldo saat ini: ${formatRupiah(saldo)}`);
-                    }
-                    document.getElementById("saldo").textContent = `Saldo: ${formatRupiah(saldo)}`;
-                });
-            });
-         </script>  
+const cardListEl = document.getElementById('cardList');
+const saldoEl = document.getElementById('saldo');
+const searchInput = document.getElementById('searchInput');
+const cartBtn = document.getElementById('cartBtn');
+const cartCountEl = document.getElementById('cartCount');
+const cartModal = document.getElementById('cartModal');
+const cartItemsEl = document.getElementById('cartItems');
+const cartTotalEl = document.getElementById('cartTotal');
+const clearCartBtn = document.getElementById('clearCart');
+const checkoutBtn = document.getElementById('checkoutBtn');
+
+function renderProducts(filter = ''){
+    const q = filter.trim().toLowerCase();
+    cardListEl.innerHTML = products
+        .filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q))
+        .map((product, index) => {
+            return `
+            <div class="card">
+                <img src="${product.img}" >
+                <div class="card-body">
+                    <h2>${product.name}</h2>
+                    <p>${product.desc}</p>
+                    <h3 style="color: rgb(0, 255, 106)">${formatRupiah(product.price)}</h3>
+                    <button class="btn-primary add-cart" data-index=${index}>Tambah ke Keranjang</button>
+                    <button class="btn-primary buy-now" data-index=${index} style="margin-top:8px;background:linear-gradient(135deg,#4caf50 0%,#2e7d32 100%);">Beli Sekarang</button>
+                </div>
+            </div>`;
+        }).join('');
+
+    // attach listeners
+    document.querySelectorAll('.add-cart').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = btn.getAttribute('data-index');
+            cart[idx] = (cart[idx] || 0) + 1;
+            updateCartUI();
+            alert('Ditambahkan ke keranjang');
+        });
+    });
+    document.querySelectorAll('.buy-now').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = btn.getAttribute('data-index');
+            const product = products[idx];
+            if (saldo >= product.price) {
+                saldo -= product.price;
+                document.getElementById('saldo').textContent = `Saldo: ${formatRupiah(saldo)}`;
+                alert(`Pembelian berhasil: ${product.name} seharga ${formatRupiah(product.price)}.`);
+            } else {
+                alert(`Saldo tidak cukup untuk membeli ${product.name}.`);
+            }
+        });
+    });
+}
+
+function updateCartUI(){
+    // update count
+    const totalItems = Object.values(cart).reduce((s,q)=>s+q,0);
+    cartCountEl.textContent = totalItems;
+
+    // render items
+    if(totalItems === 0){
+        cartItemsEl.innerHTML = '<p>Keranjang kosong</p>';
+        cartTotalEl.textContent = 'Total: ' + formatRupiah(0);
+        return;
+    }
+
+    let totalPrice = 0;
+    cartItemsEl.innerHTML = Object.keys(cart).map(key => {
+        const idx = parseInt(key,10);
+        const prod = products[idx];
+        const qty = cart[key];
+        totalPrice += prod.price * qty;
+        return `
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                <div style="flex:1">
+                    <div style="font-weight:bold">${prod.name}</div>
+                    <div style="font-size:13px;color:#666">${formatRupiah(prod.price)} x ${qty}</div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                    <button class="qty-decrease" data-index="${idx}" style="padding:6px;border-radius:6px">-</button>
+                    <button class="qty-increase" data-index="${idx}" style="padding:6px;border-radius:6px">+</button>
+                    <button class="remove-item" data-index="${idx}" style="padding:6px;border-radius:6px;background:#eee">x</button>
+                </div>
+            </div>`;
+    }).join('');
+
+    cartTotalEl.textContent = 'Total: ' + formatRupiah(totalPrice);
+
+    // attach qty buttons
+    cartItemsEl.querySelectorAll('.qty-increase').forEach(b=>b.addEventListener('click', ()=>{
+        const idx = b.getAttribute('data-index');
+        cart[idx] = (cart[idx] || 0) + 1;
+        updateCartUI();
+    }));
+    cartItemsEl.querySelectorAll('.qty-decrease').forEach(b=>b.addEventListener('click', ()=>{
+        const idx = b.getAttribute('data-index');
+        if(!cart[idx]) return;
+        cart[idx] = cart[idx] - 1;
+        if(cart[idx] <= 0) delete cart[idx];
+        updateCartUI();
+    }));
+    cartItemsEl.querySelectorAll('.remove-item').forEach(b=>b.addEventListener('click', ()=>{
+        const idx = b.getAttribute('data-index');
+        delete cart[idx];
+        updateCartUI();
+    }));
+}
+
+function calculateCartTotal(){
+    return Object.keys(cart).reduce((sum,key)=>{
+        const idx = parseInt(key,10);
+        return sum + (products[idx].price * cart[key]);
+    },0);
+}
+
+// UI interactions
+searchInput.addEventListener('input', ()=> renderProducts(searchInput.value));
+cartBtn.addEventListener('click', ()=>{
+    cartModal.style.display = cartModal.style.display === 'none' ? 'block' : 'none';
+    updateCartUI();
+});
+clearCartBtn.addEventListener('click', ()=>{ cart = {}; updateCartUI(); });
+checkoutBtn.addEventListener('click', ()=>{
+    const total = calculateCartTotal();
+    if(total === 0){ alert('Keranjang kosong'); return; }
+    if(saldo >= total){
+        saldo -= total;
+        cart = {};
+        updateCartUI();
+        document.getElementById('saldo').textContent = `Saldo: ${formatRupiah(saldo)}`;
+        alert('Pembelian berhasil. Terima kasih!');
+        cartModal.style.display = 'none';
+    } else {
+        alert('Saldo tidak cukup untuk checkout.');
+    }
+});
+
+// initial render
+document.getElementById('saldo').textContent = `Saldo: ${formatRupiah(saldo)}`;
+renderProducts();
+
+        </script>  
 
   
     </body>   
